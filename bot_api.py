@@ -966,10 +966,10 @@ def app(environ, start_response):
     if method == "OPTIONS":
         return _json_wsgi_response(start_response, 200, {"ok": True})
 
-    if method == "GET" and path in {"/", "/health"}:
+    if method == "GET" and path in {"/", "/health", "/api", "/api/health"}:
         return _json_wsgi_response(start_response, 200, _health_payload(policy_store))
 
-    if method == "POST" and path == "/decision":
+    if method == "POST" and path in {"/decision", "/api/decision"}:
         try:
             content_length = int(environ.get("CONTENT_LENGTH") or "0")
         except ValueError:
