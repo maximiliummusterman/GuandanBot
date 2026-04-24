@@ -2,10 +2,12 @@
 
 Thin Python API for the Guandan website bots.
 
+This repo is set up for a normal Python web-service deployment on Render.
+
 It exposes:
 
-- `POST /api/decision`
-- `GET /api/health`
+- `POST /decision`
+- `GET /health`
 
 The API accepts website-style match state and returns one of:
 
@@ -14,56 +16,71 @@ The API accepts website-style match state and returns one of:
 - `returnCard`
 - `skipTribute`
 
-## Repo Layout
+## Why Render
 
-Keep the deploy repo small. In practice it should contain:
+This API uses PyTorch for inference.
+That is a poor fit for Vercel serverless bundle limits, but a normal Python web service on Render handles it well.
 
-- `api/decision.py`
+## Files You Need
+
+For a clean deploy repo, keep:
+
 - `bot_api.py`
-- `checkpoint.pt`
 - `guandan_arena.py`
 - `requirements.txt`
 - `.python-version`
-- `vercel.json`
+- `Procfile`
+- `render.yaml`
 - `README.md`
 - `run_bot_api.ps1`
+- `checkpoint.pt`
 
-For Vercel, prefer a single root-level `checkpoint.pt`.
-The `checkpoints/` folder is excluded from the Vercel function bundle.
+You do not need old checkpoints, test files, or frontend reference files in the deploy repo.
 
 ## Local Run
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Port 8765
+powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Port 8765 -Checkpoint .\checkpoint.pt
 ```
 
-Optional explicit checkpoint:
+If you omit `-Checkpoint`, the API tries:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Checkpoint .\checkpoints\guandan_latest.pt
-```
+1. `GUANDAN_CHECKPOINT`
+2. `checkpoint.pt`
+3. `checkpoints/latest.pt`
+4. latest `.pt` file in `checkpoints/`
 
-## Vercel Deploy
+## Render Deploy
 
-1. Put the latest model file at repo root as `checkpoint.pt`.
-2. Push this repo to GitHub.
-3. Import the repo into Vercel.
-4. Leave the framework as auto-detected Python.
-5. If you want a different checkpoint location, set `GUANDAN_CHECKPOINT` in Vercel project environment variables.
-6. Deploy.
+### Option 1: Blueprint
 
-Notes:
+This repo includes [render.yaml](</c:/Users/Oscar Lin/OneDrive/Dokumente/Guandan AI/render.yaml:1>).
 
-- `api/decision.py` is the only Vercel function entrypoint.
-- `GET /api/health` is rewritten to that same function to avoid bundling PyTorch twice.
-- `.python-version` pins Python `3.12`.
-- `requirements.txt` uses CPU-only PyTorch wheels to avoid the oversized default Linux package.
-- `vercel.json` excludes local/dev files and the `checkpoints/` training folder from the Python bundle.
-- If Vercel still exceeds the function size limit after this, the remaining bottleneck is PyTorch itself and you will likely need a non-Lambda host.
+Steps:
+
+1. Put your latest model at repo root as `checkpoint.pt`.
+2. Push the repo to GitHub.
+3. In Render, choose `New +` -> `Blueprint`.
+4. Select this repo.
+5. Deploy.
+
+### Option 2: Manual Web Service
+
+If you prefer configuring Render manually, use:
+
+- Runtime: `Python`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 bot_api:app`
+- Health Check Path: `/health`
+
+Environment variables:
+
+- `PYTHON_VERSION=3.12.9`
+- `GUANDAN_CHECKPOINT=checkpoint.pt`
 
 ## Endpoints
 
-### `GET /api/health`
+### `GET /health`
 
 Returns basic runtime info:
 
@@ -75,7 +92,7 @@ Returns basic runtime info:
 }
 ```
 
-### `POST /api/decision`
+### `POST /decision`
 
 Minimal action request:
 
@@ -139,7 +156,7 @@ Important:
 
 - `players` must contain all four seats.
 - The acting player's `hand` must match the current website state.
-- For Vercel deploys, use a single root `checkpoint.pt`.
+- Put only one deploy-time model in the repo: `checkpoint.pt`.
 
 Possible response fields:
 
@@ -153,3 +170,12 @@ Possible response fields:
 - `tributeState`
 - `skipTribute`
 - `checkpoint`
+
+## Frontend Wiring
+
+Once deployed, your website should call:
+
+- `https://YOUR-RENDER-SERVICE.onrender.com/health`
+- `https://YOUR-RENDER-SERVICE.onrender.com/decision`
+
+If your frontend is still hosted on Vercel, you can either call Render directly or add a Vercel rewrite that proxies `/api/bot/*` to your Render service.
