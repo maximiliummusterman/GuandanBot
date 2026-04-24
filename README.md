@@ -21,15 +21,16 @@ Keep the deploy repo small. In practice it should contain:
 - `api/decision.py`
 - `api/health.py`
 - `bot_api.py`
+- `checkpoint.pt`
 - `guandan_arena.py`
 - `requirements.txt`
 - `.python-version`
 - `vercel.json`
 - `README.md`
 - `run_bot_api.ps1`
-- one latest checkpoint in `checkpoints/`
 
-Remove old checkpoints, test files, and frontend reference files from the deploy repo if you do not need them.
+For Vercel, prefer a single root-level `checkpoint.pt`.
+The `checkpoints/` folder is excluded from the Vercel function bundle.
 
 ## Local Run
 
@@ -45,19 +46,20 @@ powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Checkpoint .\checkpo
 
 ## Vercel Deploy
 
-1. Put the latest model file in `checkpoints/`.
+1. Put the latest model file at repo root as `checkpoint.pt`.
 2. Push this repo to GitHub.
 3. Import the repo into Vercel.
 4. Leave the framework as auto-detected Python.
-5. If your checkpoint is not the latest `.pt` file in `checkpoints/`, set `GUANDAN_CHECKPOINT` in Vercel project environment variables.
+5. If you want a different checkpoint location, set `GUANDAN_CHECKPOINT` in Vercel project environment variables.
 6. Deploy.
 
 Notes:
 
 - `api/decision.py` and `api/health.py` are the Vercel entrypoints and re-export the WSGI app from `bot_api.py`.
 - `.python-version` pins Python `3.12`.
-- `vercel.json` excludes local/dev files from the Python bundle.
-- Keep only the latest checkpoint in the deploy repo to avoid unnecessary bundle size.
+- `requirements.txt` uses CPU-only PyTorch wheels to avoid the oversized default Linux package.
+- `vercel.json` excludes local/dev files and the `checkpoints/` training folder from the Python bundle.
+- If Vercel still exceeds the function size limit after this, the remaining bottleneck is PyTorch itself and you will likely need a non-Lambda host.
 
 ## Endpoints
 
@@ -69,7 +71,7 @@ Returns basic runtime info:
 {
   "status": "ok",
   "device": "cpu",
-  "checkpoint": "checkpoints/guandan_ep256000.pt"
+  "checkpoint": "checkpoint.pt"
 }
 ```
 
@@ -137,7 +139,7 @@ Important:
 
 - `players` must contain all four seats.
 - The acting player's `hand` must match the current website state.
-- For production deploys, keep only the latest checkpoint in `checkpoints/`.
+- For Vercel deploys, use a single root `checkpoint.pt`.
 
 Possible response fields:
 
