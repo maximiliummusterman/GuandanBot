@@ -55,7 +55,7 @@ powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Checkpoint .\checkpo
 Notes:
 
 - `api/decision.py` and `api/health.py` are the Vercel entrypoints and re-export the WSGI app from `bot_api.py`.
-- `.python-version` pins Python `3.11`.
+- `.python-version` pins Python `3.12`.
 - `vercel.json` excludes local/dev files from the Python bundle.
 - Keep only the latest checkpoint in the deploy repo to avoid unnecessary bundle size.
 
