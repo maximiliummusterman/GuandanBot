@@ -19,7 +19,6 @@ The API accepts website-style match state and returns one of:
 Keep the deploy repo small. In practice it should contain:
 
 - `api/decision.py`
-- `api/health.py`
 - `bot_api.py`
 - `checkpoint.pt`
 - `guandan_arena.py`
@@ -55,7 +54,8 @@ powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Checkpoint .\checkpo
 
 Notes:
 
-- `api/decision.py` and `api/health.py` are the Vercel entrypoints and re-export the WSGI app from `bot_api.py`.
+- `api/decision.py` is the only Vercel function entrypoint.
+- `GET /api/health` is rewritten to that same function to avoid bundling PyTorch twice.
 - `.python-version` pins Python `3.12`.
 - `requirements.txt` uses CPU-only PyTorch wheels to avoid the oversized default Linux package.
 - `vercel.json` excludes local/dev files and the `checkpoints/` training folder from the Python bundle.
