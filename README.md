@@ -4,8 +4,8 @@ Thin Python API for the Guandan website bots.
 
 It exposes:
 
-- `POST /decision`
-- `GET /health`
+- `POST /api/decision`
+- `GET /api/health`
 
 The API accepts website-style match state and returns one of:
 
@@ -18,7 +18,8 @@ The API accepts website-style match state and returns one of:
 
 Keep the deploy repo small. In practice it should contain:
 
-- `app.py`
+- `api/decision.py`
+- `api/health.py`
 - `bot_api.py`
 - `guandan_arena.py`
 - `requirements.txt`
@@ -53,14 +54,14 @@ powershell -ExecutionPolicy Bypass -File .\run_bot_api.ps1 -Checkpoint .\checkpo
 
 Notes:
 
-- `app.py` is the Vercel entrypoint and re-exports the WSGI app from `bot_api.py`.
+- `api/decision.py` and `api/health.py` are the Vercel entrypoints and re-export the WSGI app from `bot_api.py`.
 - `.python-version` pins Python `3.11`.
 - `vercel.json` excludes local/dev files from the Python bundle.
 - Keep only the latest checkpoint in the deploy repo to avoid unnecessary bundle size.
 
 ## Endpoints
 
-### `GET /health`
+### `GET /api/health`
 
 Returns basic runtime info:
 
@@ -72,7 +73,7 @@ Returns basic runtime info:
 }
 ```
 
-### `POST /decision`
+### `POST /api/decision`
 
 Minimal action request:
 
