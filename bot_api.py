@@ -976,7 +976,14 @@ def app(environ, start_response):
     if method == "OPTIONS":
         return _json_wsgi_response(start_response, 200, {"ok": True})
 
-    if method == "GET" and path in {"/", "/health", "/api", "/api/health"}:
+    if method == "GET" and path in {
+        "/",
+        "/health",
+        "/decision",
+        "/api",
+        "/api/health",
+        "/api/decision",
+    }:
         return _json_wsgi_response(start_response, 200, _health_payload(policy_store))
 
     if method == "POST" and path in {"/decision", "/api/decision"}:
