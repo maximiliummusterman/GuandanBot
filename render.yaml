@@ -2,7 +2,7 @@ services:
   - type: web
     name: guandan-bot-api
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 bot_api:app
     healthCheckPath: /health
