@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: guandan-bot-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 bot_api:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      - key: GUANDAN_CHECKPOINT
+        value: checkpoint.pt
