@@ -18,7 +18,7 @@ Request shape:
     "currentPlayer": {...},      # optional for tribute/return requests
     "seat": 1,                   # optional; defaults to match.currentSeat
     "sample": false,             # optional
-    "checkpoint": "checkpoints/guandan_ep256000.pt"  # optional override
+    "checkpoint": "checkpoint.pt"  # optional override
   }
 
 Response shape:
@@ -31,7 +31,7 @@ Response shape:
     "tributeCard": {...},
     "returnCard": {...},
     "tributeState": "BASIC",
-    "checkpoint": "checkpoints/guandan_ep256000.pt"
+    "checkpoint": "checkpoint.pt"
   }
 
 Run:
@@ -397,10 +397,19 @@ def resolve_checkpoint_path(explicit_path: Optional[str] = None) -> str:
     if env_path:
         return resolve_checkpoint_path(env_path)
 
+    preferred_paths = [
+        Path("checkpoint.pt"),
+        Path("checkpoints") / "latest.pt",
+    ]
+    for checkpoint_path in preferred_paths:
+        if checkpoint_path.exists():
+            return str(checkpoint_path)
+
     checkpoint_dir = Path("checkpoints")
     if not checkpoint_dir.is_dir():
         raise FileNotFoundError(
-            "Could not find checkpoints/. Set GUANDAN_CHECKPOINT or pass --checkpoint."
+            "Could not find checkpoint.pt or checkpoints/. "
+            "Set GUANDAN_CHECKPOINT or pass --checkpoint."
         )
 
     checkpoint_paths = sorted(
@@ -413,7 +422,8 @@ def resolve_checkpoint_path(explicit_path: Optional[str] = None) -> str:
     )
     if not checkpoint_paths:
         raise FileNotFoundError(
-            "No checkpoint files found in checkpoints/. Set GUANDAN_CHECKPOINT or pass --checkpoint."
+            "No checkpoint files found. Expected checkpoint.pt, checkpoints/latest.pt, "
+            "or a .pt file in checkpoints/. Set GUANDAN_CHECKPOINT or pass --checkpoint."
         )
     return str(checkpoint_paths[-1])
 
@@ -1012,7 +1022,8 @@ def parse_args() -> argparse.Namespace:
         "--checkpoint",
         type=str,
         default=None,
-        help="Checkpoint path. Defaults to GUANDAN_CHECKPOINT or the latest file in checkpoints/.",
+        help="Checkpoint path. Defaults to GUANDAN_CHECKPOINT, checkpoint.pt, "
+             "checkpoints/latest.pt, or the latest file in checkpoints/.",
     )
     args = parser.parse_args()
     if not (1 <= args.port <= 65535):
