@@ -1,8 +1,8 @@
 """
 Thin HTTP API for Guandan bot decisions.
 
-The server keeps the frontend untouched and translates website-style payloads
-into the existing Python arena logic.
+This service is intended to run as a normal Python web service
+(for example on Render), not as a serverless function bundle.
 
 Supported decisions:
   - action:      choose the bot play for the current trick
@@ -34,8 +34,11 @@ Response shape:
     "checkpoint": "checkpoint.pt"
   }
 
-Run:
-  python bot_api.py --port 8765
+Run locally:
+  python bot_api.py --host 127.0.0.1 --port 8765
+
+Run in production:
+  gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 bot_api:app
 """
 
 from __future__ import annotations
@@ -976,17 +979,10 @@ def app(environ, start_response):
     if method == "OPTIONS":
         return _json_wsgi_response(start_response, 200, {"ok": True})
 
-    if method == "GET" and path in {
-        "/",
-        "/health",
-        "/decision",
-        "/api",
-        "/api/health",
-        "/api/decision",
-    }:
+    if method == "GET" and path in {"/", "/health"}:
         return _json_wsgi_response(start_response, 200, _health_payload(policy_store))
 
-    if method == "POST" and path in {"/decision", "/api/decision"}:
+    if method == "POST" and path == "/decision":
         try:
             content_length = int(environ.get("CONTENT_LENGTH") or "0")
         except ValueError:
@@ -1022,9 +1018,11 @@ def run_server(host: str, port: int, checkpoint_path: Optional[str] = None) -> N
 
 
 def parse_args() -> argparse.Namespace:
+    default_host = os.environ.get("HOST", "127.0.0.1")
+    default_port = int(os.environ.get("PORT", "8765"))
     parser = argparse.ArgumentParser(description="Serve the Guandan bot as a thin HTTP API.")
-    parser.add_argument("--host", type=str, default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--host", type=str, default=default_host)
+    parser.add_argument("--port", type=int, default=default_port)
     parser.add_argument(
         "--checkpoint",
         type=str,
