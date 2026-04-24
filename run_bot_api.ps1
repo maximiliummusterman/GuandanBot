@@ -24,5 +24,11 @@ if ($Checkpoint) {
     $env:GUANDAN_CHECKPOINT = (Resolve-Path $Checkpoint).Path
 }
 
-$argsList = @("-3.11", "bot_api.py", "--host", $Host, "--port", $Port)
-& py @argsList
+$argsList = @("bot_api.py", "--host", $Host, "--port", $Port)
+
+try {
+    & py -3.12 @argsList
+}
+catch {
+    & py @argsList
+}
