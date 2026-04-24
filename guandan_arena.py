@@ -41,7 +41,7 @@ BATCH_SIZE    = 2048
 HIDDEN        = 256
 SAVE_INTERVAL = 4000
 LOG_INTERVAL  = 400
-NUM_ENVS      = 24          # parallel game environments
+NUM_ENVS      = 48          # parallel game environments
 DEVICE        = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ── Card constants ─────────────────────────────────────────────────────────────
