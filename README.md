@@ -55,6 +55,7 @@ If you omit `-Checkpoint`, the API tries:
 ### Option 1: Blueprint
 
 This repo includes [render.yaml](</c:/Users/Oscar Lin/OneDrive/Dokumente/Guandan AI/render.yaml:1>).
+It is configured for Render's `free` web-service plan.
 
 Steps:
 
@@ -64,11 +65,17 @@ Steps:
 4. Select this repo.
 5. Deploy.
 
+Notes:
+
+- If Render asked for a card before, it was because the Blueprint was set to the paid `starter` plan.
+- Free web services can spin down after idle time, so the first bot request after a pause can be slow.
+
 ### Option 2: Manual Web Service
 
 If you prefer configuring Render manually, use:
 
 - Runtime: `Python`
+- Instance Type: `Free`
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 bot_api:app`
 - Health Check Path: `/health`
